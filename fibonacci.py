@@ -1,6 +1,8 @@
 import math
-
-import pygame, sys, os
+import copy
+import numpy as np
+import pygame
+import sys
 from pygame.locals import *
 
 pygame.init()
@@ -10,7 +12,7 @@ screen.fill((0, 0, 0))
 # player = pygame.image.load(os.path.join("test.png"))
 # player.convert()
 
-scale = 2
+scale = 1
 
 
 def s5(n, r):  # works better for first direction
@@ -29,7 +31,7 @@ def pol2cart(r, theta):
 
 
 # set size of fib sun
-num_points = 1000
+num_points = 700
 distance = 10 * scale
 
 # do the cartesian conversion
@@ -39,68 +41,31 @@ coordinates = [pol2cart(r, t) for r, t in s5(num_points, distance)]
 display_size = pygame.display.get_surface().get_size()
 
 
-# coordinates = [(x+display_size[0]/2,y+display_size[1]/2) for x,y in coordinates]
-
-# create gui
-# master = Tk()
-# canvas = Canvas(master,width = 500,height=500)
-# canvas.pack()
-
 def calculateDistance(point1, point2):
     dist = math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
     return dist
 
+
 def closest_node_distance(node, nodes):
-    pt = []
-    dist = 9999999
-    for n in nodes:
-        if node <> n and calculateDistance(node, n) <= dist:
-            dist = calculateDistance(node, n)
-            pt = n
-    return calculateDistance(node, pt)
+    nodes = copy.copy(nodes)
+    nodes.remove(node)
+    nodes = np.asarray(nodes)
+    dist_2 = np.sum((nodes - node) ** 2, axis=1)
+    return calculateDistance(node, nodes[np.argmin(dist_2)])
+
 
 # plot points
-h = 1
 for x, y in coordinates:
-    # print (x, y)
-    # power = 1.20
-    # old_x = x
-    # old_y = y
-    # # x *= power
-    # # y *= power
-    # if x > 0:
-    #     x **= power
-    # else:
-    #     x = -(abs(x) ** power)
-    #
-    # if y > 0:
-    #     y **= power
-    # else:
-    #     y = -(abs(y) ** power)
-    #
-    # x *= 0.5
-    # y *= 0.5
-    # print (x, y)
-    # if x != 0 and y != 0:
-    #     print "x factor: " + str(x / old_x) + "  y factor: " + str(y / old_y)
-    # print ""
-
     distance_to_closest_node = closest_node_distance((x, y), coordinates)
-    # print "distance_to_closest_node: " + str(distance_to_closest_node)
+    print "distance_to_closest_node: " + str(distance_to_closest_node)
 
     distance = calculateDistance((0, 0), (x, y))
-    size = int(max(1, (distance_to_closest_node - 2) / 2.0) * scale)
-
-    # size = 6
+    size = int(max(1, (distance_to_closest_node - 1) / 2.0))
 
     pygame.draw.circle(screen, (20, 20, 20), (int(round(x + display_size[0] / 2)), int(round(y + display_size[1] / 2))),
                        size)
-    # canvas.create_oval(x+7,y+7,x-7,y-7)
-    # canvas.create_text(x,y,text=h)
-    h += 1
 
 pygame.display.flip()
-# mainloop()
 
 while True:
     for event in pygame.event.get():
