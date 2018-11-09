@@ -7,18 +7,21 @@ from pygame.locals import *
 
 pygame.init()
 
-scale = 3
-num_nodes = 700
-node_distance = 10 * scale
+scale = 1
+num_nodes = 800
+node_distance = 12 * scale
 node_color = (255, 255, 255)
-
+power_factor = 1.5
+power_multiplier = 0.25
+space_between_nodes = 4
+minimum_node_size = 2
 
 def s5(n, r):  # works better for first direction
     spirals = []
     golden_ratio = (1 + 5 ** 0.5) / 2.0
     for i in range(n + 1):
         # "** 1.2 * 0.5" gives the outer nodes more space, so we can scale them bigger.
-        spirals.append((r * (i ** 0.5) ** 1.2 * 0.5, ((i * (360) / golden_ratio) % 360)))
+        spirals.append((r * (i ** 0.5) ** power_factor * power_multiplier, ((i * (360) / golden_ratio) % 360)))
     return spirals
 
 
@@ -64,7 +67,8 @@ for x, y in coordinates:
     distance_to_closest_node = closest_node_distance((x, y), coordinates)
     # print "distance_to_closest_node: " + str(distance_to_closest_node)
 
-    size = int(max(1, (distance_to_closest_node - 1) / 2.0))
+    size = int(max(minimum_node_size * scale, (distance_to_closest_node - space_between_nodes * scale) / 2.0))
+    # print "distance_to_closest_node: " + str(distance_to_closest_node) + " size: " + str(size)
 
     pygame.draw.circle(surface, node_color, (int(round(x + surface_size[0] / 2)), int(round(y + surface_size[1] / 2))),
                        size)
