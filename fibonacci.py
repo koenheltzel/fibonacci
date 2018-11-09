@@ -7,14 +7,15 @@ from pygame.locals import *
 
 pygame.init()
 
-scale = 1
-num_nodes = 800
+scale = 3
+num_nodes = 2000
 node_distance = 12 * scale
 node_color = (255, 255, 255)
 power_factor = 1.5
 power_multiplier = 0.25
 space_between_nodes = 4
 minimum_node_size = 2
+source_image = None # "walter.png"
 
 def s5(n, r):  # works better for first direction
     spirals = []
@@ -62,6 +63,9 @@ desired_size = int(1.1 * 2 * calculateDistance((0, 0), nodes[np.argmin(dist_2)])
 surface = pygame.Surface((desired_size, desired_size)).convert()
 surface_size = surface.get_size()
 
+if source_image:
+    image = pygame.image.load(source_image)
+
 # plot points
 for x, y in coordinates:
     distance_to_closest_node = closest_node_distance((x, y), coordinates)
@@ -70,7 +74,15 @@ for x, y in coordinates:
     size = int(max(minimum_node_size * scale, (distance_to_closest_node - space_between_nodes * scale) / 2.0))
     # print "distance_to_closest_node: " + str(distance_to_closest_node) + " size: " + str(size)
 
-    pygame.draw.circle(surface, node_color, (int(round(x + surface_size[0] / 2)), int(round(y + surface_size[1] / 2))),
+    target_x = int(round(x + surface_size[0] / 2))
+    target_y = int(round(y + surface_size[1] / 2))
+
+    if source_image:
+        average_area = 50
+        node_color = pygame.transform.average_color(image, (target_x - (average_area / 2), target_y - (average_area / 2), average_area, average_area))
+        # node_color = image.get_at((target_x, target_y))
+
+    pygame.draw.circle(surface, node_color, (target_x, target_y),
                        size)
 
 print "surface_size: " + str(surface.get_size())
