@@ -4,6 +4,11 @@ import numpy as np
 import pygame
 import sys
 from pygame.locals import *
+import os
+import shutil
+import time
+
+# import pygame.gfxdraw
 
 pygame.init()
 
@@ -15,7 +20,18 @@ power_factor = 1.5
 power_multiplier = 0.25
 space_between_nodes = 4
 minimum_node_size = 2
-source_image = None # "walter.png"
+animation = True
+save_animation = True
+source_image = "freddie3.png"
+destination_directory = "freddie3z"
+animation_fade_duration = 25
+
+if save_animation:
+    if os.path.isdir(destination_directory):
+        shutil.rmtree(destination_directory)
+        time.sleep(0.2)
+    os.mkdir(destination_directory)
+
 
 def s5(n, r):  # works better for first direction
     spirals = []
@@ -55,6 +71,33 @@ def closest_node_distance(node, nodes):
     return calculateDistance(node, nodes[np.argmin(dist_2)])
 
 
+def pygame_tick():
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+
+
+def draw_display(surface, aliased=False):
+    # print "surface_size: " + str(surface.get_size())
+    if aliased:
+        scaled_surface = pygame.transform.smoothscale(surface, display_size, display)
+    else:
+        scaled_surface = pygame.transform.scale(surface, display_size, display)
+    # print "scaled_surface_size: " + str(scaled_surface.get_size())
+    pygame.display.flip()
+
+def scale_color_to_white(color, scale=0):
+    """
+    Scales the color to white. 0 is the original color, 1 is completely white. Returns the input color as a (R, G, B) tuple..
+    """
+    color = list(color)
+    for i in range(0, len(color)):
+        distance_to_white = 255 - color[i]
+        color[i] = max(0, min(255, int(color[i] + scale * distance_to_white)))
+    return tuple(color)
+
+
 # Calculate desired surface size, by taking node_distance from 0,0 to center of outermost node, then doubling that for the whole thing, and padding by factor 1.1 to include the outermost nodes and some border.
 nodes = np.asarray(coordinates)
 dist_2 = np.sum(coordinates, axis=1)
@@ -66,8 +109,9 @@ surface_size = surface.get_size()
 if source_image:
     image = pygame.image.load(source_image)
 
-# plot points
-for x, y in coordinates:
+def draw_point(index, scale_to_white = 0):
+    (x, y) = coordinates[index]
+
     distance_to_closest_node = closest_node_distance((x, y), coordinates)
     # print "distance_to_closest_node: " + str(distance_to_closest_node)
 
@@ -81,19 +125,33 @@ for x, y in coordinates:
         average_area = 50
         node_color = pygame.transform.average_color(image, (target_x - (average_area / 2), target_y - (average_area / 2), average_area, average_area))
         # node_color = image.get_at((target_x, target_y))
+        node_color = scale_color_to_white(node_color, scale_to_white)
 
-    pygame.draw.circle(surface, node_color, (target_x, target_y),
-                       size)
+    pygame.draw.circle(surface, node_color, (target_x, target_y), size)
+    # pygame.gfxdraw.aacircle(surface, target_x, target_y, size, node_color)
+    # pygame.gfxdraw.filled_circle(surface, target_x, target_y, size, node_color)
 
-print "surface_size: " + str(surface.get_size())
-scaled_surface = pygame.transform.smoothscale(surface, display_size, display)
-print "scaled_surface_size: " + str(scaled_surface.get_size())
-pygame.display.flip()
+# plot points
+for index in range(0, len(coordinates) + animation_fade_duration - 1):
+    pygame_tick() # Prevent hangup by pygame event overflow
 
-pygame.image.save(surface, "output.png")
+    for tmp_index in range(max(0, index - animation_fade_duration), index):
+        pygame_tick() # Prevent hangup by pygame event overflow
+        if tmp_index < len(coordinates):
+            scale_to_white = 1.0 - (index - tmp_index) / float(animation_fade_duration)
+            draw_point(tmp_index, scale_to_white)
+
+    draw_display(surface)
+
+    if save_animation:
+        pygame.image.save(surface, "%s\output%04d.jpg" % (destination_directory, index))
+
+    index += 1
+
+if not animation:
+    pygame.image.save(surface, "output.png")
+
+draw_display(surface, False)
 
 while True:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+    pygame_tick()
