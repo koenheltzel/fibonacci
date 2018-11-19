@@ -16,15 +16,26 @@ scale = 3
 num_nodes = 2000
 node_distance = 12 * scale
 node_color = (255, 255, 255)
+background_color = (0, 0, 0)
 power_factor = 1.5
 power_multiplier = 0.25
 space_between_nodes = 4
 minimum_node_size = 2
-animation = True
-save_animation = True
-source_image = "freddie3.png"
+animation = False
+save_animation = False if animation else False
+source_image = "freddie.png"
 destination_directory = "freddie3z"
-animation_fade_duration = 25
+animation_fade_duration = 25 if animation else 1
+
+if 0:
+    background_color = (255, 218, 208)
+    animation = False
+    source_image = "eefke - kristen.png"
+
+if 0:
+    background_color = (211, 221, 255)
+    animation = False
+    source_image = "tren - kristen.png"
 
 if save_animation:
     if os.path.isdir(destination_directory):
@@ -54,7 +65,7 @@ coordinates = [pol2cart(r, t) for r, t in s5(num_nodes, node_distance)]
 
 # center for the canvas
 display = pygame.display.set_mode((800, 800))
-display.fill((0, 0, 0))
+display.fill(background_color)
 display_size = pygame.display.get_surface().get_size()
 
 
@@ -104,6 +115,7 @@ dist_2 = np.sum(coordinates, axis=1)
 desired_size = int(1.1 * 2 * calculateDistance((0, 0), nodes[np.argmin(dist_2)]))
 
 surface = pygame.Surface((desired_size, desired_size)).convert()
+surface.fill(background_color)
 surface_size = surface.get_size()
 
 if source_image:
